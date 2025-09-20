@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Menu, X } from 'lucide-react';
+import { GraduationCap, Menu, X, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface HeaderProps {
   onLoginClick: () => void;
@@ -8,6 +15,11 @@ interface HeaderProps {
 
 const Header = ({ onLoginClick }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -50,9 +62,29 @@ const Header = ({ onLoginClick }: HeaderProps) => {
 
           {/* CTA and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Button onClick={onLoginClick} className="hidden sm:flex">
-              Login / Sign Up
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="hidden sm:flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>{profile?.full_name || user.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="text-muted-foreground">
+                    {profile?.role || 'User'} • {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button onClick={onLoginClick} className="hidden sm:flex">
+                Login / Sign Up
+              </Button>
+            )}
             
             {/* Mobile Menu Button */}
             <button
@@ -77,9 +109,21 @@ const Header = ({ onLoginClick }: HeaderProps) => {
                   {item.label}
                 </button>
               ))}
-              <Button onClick={onLoginClick} className="self-start mt-4">
-                Login / Sign Up
-              </Button>
+              {user ? (
+                <div className="mt-4 pt-4 border-t border-border space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    {profile?.full_name || user.email} • {profile?.role || 'User'}
+                  </div>
+                  <Button onClick={handleSignOut} variant="outline" className="self-start">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={onLoginClick} className="self-start mt-4">
+                  Login / Sign Up
+                </Button>
+              )}
             </nav>
           </div>
         )}

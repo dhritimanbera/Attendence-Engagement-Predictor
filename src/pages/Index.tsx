@@ -18,7 +18,7 @@ const Index = () => {
         <HeroSection />
         <ChallengeSection />
         <SolutionSection />
-        <DashboardSection />
+        <DashboardSection onLoginClick={() => setIsLoginModalOpen(true)} />
         <SDGSection />
         <Footer />
       </div>

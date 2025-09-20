@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ interface LoginModalProps {
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const { toast } = useToast();
+  const { signIn, signUp } = useAuth();
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [signUpForm, setSignUpForm] = useState({ 
     fullName: '', 
@@ -26,25 +29,77 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
     password: '', 
     role: 'student' as 'student' | 'faculty'
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes - in real app, this would connect to Supabase
-    toast({
-      title: "Demo Mode",
-      description: "Connect to Supabase for authentication functionality",
-    });
-    onClose();
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn(loginForm.email, loginForm.password);
+      
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        });
+        onClose();
+        // Reset form
+        setLoginForm({ email: '', password: '' });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes - in real app, this would connect to Supabase
-    toast({
-      title: "Demo Mode", 
-      description: "Connect to Supabase to create user accounts",
-    });
-    onClose();
+    setIsLoading(true);
+
+    try {
+      const { error } = await signUp(
+        signUpForm.email, 
+        signUpForm.password, 
+        signUpForm.fullName, 
+        signUpForm.role
+      );
+      
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+        onClose();
+        // Reset form
+        setSignUpForm({ fullName: '', email: '', password: '', role: 'student' });
+      }
+    } catch (error) {
+      toast({
+        title: "Sign Up Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,8 +141,15 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
           </TabsContent>
@@ -145,8 +207,15 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 </RadioGroup>
               </div>
 
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             </form>
           </TabsContent>
